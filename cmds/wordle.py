@@ -46,9 +46,33 @@ class Wordle(Cog_Extension):
         if not user_id in self.game_dict:
             await ctx.send("The game hasn't started yet. Consider using **$wordle** to start a game.")
         result = self.game_dict[user_id].guess(guesses)
+
+        await ctx.message.delete()
+
         await ctx.send(result[1])
         if result[0] == GAME_OVER:
             self.game_dict.pop(user_id)
+
+    @commands.command()
+    async def modify(self, ctx, answer: str):
+        user_id = ctx.author.id
+        if not user_id in self.game_dict:
+            await ctx.send("The game hasn't started yet. Consider using **$wordle** to start a game.")
+            return
+        if answer not in Wordle.word_list:
+            await ctx.send(f"**{answer}** is not in the word list!")
+        else:
+            self.game_dict[user_id].answer = answer
+
+            for letter in self.game_dict[user_id].answer:
+                if not letter in self.game_dict[user_id].word_composition:
+                    self.game_dict[user_id].word_composition[letter] = 1
+                else:
+                    self.game_dict[user_id].word_composition[letter] += 1
+
+
+
+            await ctx.send(f"The answer has been modified to **{answer}**")
 
     @commands.command()
     async def end(self, ctx):
@@ -109,14 +133,14 @@ class WordleGame():
             occurance = dict()
 
             for i in range(len(guesses)):
-                if guesses[i] == self.answer[i]:
-                    output += ":green_square: "
-                elif guesses[i] in self.answer:
+                if guesses[i] in self.answer :
                     if not guesses[i] in occurance:
                         occurance[guesses[i]] = 1
                     else:
                         occurance[guesses[i]] += 1
-                    if occurance[guesses[i]] < self.word_composition[guesses[i]]:
+                    if guesses[i] == self.answer[i]:
+                        output += ":green_square: "
+                    elif occurance[guesses[i]] <= self.word_composition[guesses[i]]:
                         output += ":yellow_square: "
                     else:
                         output += ":black_large_square: "
