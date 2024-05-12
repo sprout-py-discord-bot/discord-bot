@@ -138,6 +138,7 @@ class WordleGame():
                         occurance[guesses[i]] = 1
                     else:
                         occurance[guesses[i]] += 1
+                        
                     if guesses[i] == self.answer[i]:
                         output += ":green_square: "
                     elif occurance[guesses[i]] <= self.word_composition[guesses[i]]:
