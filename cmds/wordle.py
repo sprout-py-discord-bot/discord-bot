@@ -5,6 +5,9 @@ import json
 from config import *
 from core import Cog_Extension
 from random import randint
+from bs4 import BeautifulSoup
+import requests as rq
+from discord import app_commands
 
 class Wordle(Cog_Extension):
     """
@@ -23,8 +26,13 @@ class Wordle(Cog_Extension):
         # Call the parent's constructor
         super().__init__(bot)
         # Load the word list
-        with open("./wordle.json", "r") as f:
-            Wordle.word_list = json.load(f)
+        raw_html = rq.get("https://www.wordunscrambler.net/word-list/wordle-word-list").text
+        word_doc = BeautifulSoup(raw_html, "html.parser")
+        word_list = word_doc.find_all(class_ = "invert light")
+        Wordle.word_list = list()
+
+        for item in word_list:
+            Wordle.word_list.append(item.text[1:-1])
 
         # The dictionary for game ongoing
         self.game_dict = dict()
@@ -54,37 +62,11 @@ class Wordle(Cog_Extension):
             self.game_dict.pop(user_id)
 
     @commands.command()
-    async def modify(self, ctx, answer: str):
-        user_id = ctx.author.id
-        if not user_id in self.game_dict:
-            await ctx.send("The game hasn't started yet. Consider using **$wordle** to start a game.")
-            return
-        if answer not in Wordle.word_list:
-            await ctx.send(f"**{answer}** is not in the word list!")
-        else:
-            self.game_dict[user_id].answer = answer
-
-            for letter in self.game_dict[user_id].answer:
-                if not letter in self.game_dict[user_id].word_composition:
-                    self.game_dict[user_id].word_composition[letter] = 1
-                else:
-                    self.game_dict[user_id].word_composition[letter] += 1
-
-
-
-            await ctx.send(f"The answer has been modified to **{answer}**")
-
-    @commands.command()
     async def end(self, ctx):
         user_id = ctx.author.id        
         answer = self.game_dict[user_id].answer
         self.game_dict.pop(user_id)
         await ctx.send(f"The current game has been terminated, the answer is **{answer}**")
-    
-    @commands.command()
-    async def gimme(self, ctx):
-        # Something like a cheat code, will be removed after things are finished
-        await ctx.send(self.game_dict[ctx.author.id].answer)
     
 class WordleGame():
     """
@@ -154,7 +136,7 @@ class WordleGame():
             
             self.count += 1
             if self.count == 6:
-                return (CONTINUE, f"Game Over! You've run out of all 6 attempts.\nThe correct answer is {self.answer}.")
+                return (CONTINUE, output + f"\nGame Over! You've run out of all 6 attempts.\nThe correct answer is {self.answer}.")
 
             output += f"\n{6 - self.count} guess(es) left!"
 
