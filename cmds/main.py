@@ -1,20 +1,16 @@
 import discord
 from discord.ext import commands
-import json 
+import json
 from core import Cog_Extension
 from datetime import datetime
 
-class Main(Cog_Extension):
-        
-    def __init__(self, bot):
-        super().__init__(bot)
-        self.to_do_list = {}
 
+class Main(Cog_Extension):
 
     @commands.command()
     async def Hello(self, ctx):
         await ctx.send("Hello, world")
-    
+
     @commands.command()
     async def Todolist(self, ctx, action, item=None, time=None):
         '''
@@ -61,18 +57,27 @@ class Main(Cog_Extension):
                 self.to_do_list[ctx.author.id] = {}
                 await ctx.send('success')
         elif action == 'print':
-            await ctx.send(f"{ctx.author.name}'s todolist")
             if len(self.to_do_list[ctx.author.id]) == 0:
-                await ctx.send("```yaml\nnot thing in todolist```")
-            i = 0
-            for k in self.to_do_list[ctx.author.id]:
-                if len(k) > i:
-                    i = len(k)
-            for k, v in self.to_do_list[ctx.author.id].items():
+                await ctx.send(f"```yaml\nuser name : {ctx.author.name}\n\nnot thing in todolist```")
+            else:
+                i = 0
+                for k in self.to_do_list[ctx.author.id]:
+                    if len(k) > i:
+                        i = len(k)
+                result = [f"user name : {ctx.author.name}\n"]
+                k = 'item'
+                v = 'date'
                 while len(k) < i+1:
                     k += ' '
-                v = '/'.join(v)
-                await ctx.send(f"```yaml\n{k}: '{v}'```")
+                result.append(f"{k}: {v}")
+                for k, v in self.to_do_list[ctx.author.id].items():
+                    while len(k) < i+1:
+                        k += ' '
+                    v = '/'.join(v)
+                    result.append(f"{k}: '{v}'")
+                result = '\n'.join(result)
+                await ctx.send(f'```yaml\n{result}\n```')
+
         elif action == 'sort':
             self.to_do_list[ctx.author.id] = dict(
                 sorted(self.to_do_list[ctx.author.id].items()))
@@ -93,6 +98,7 @@ class Main(Cog_Extension):
     Add the necessary bot commands here
     Consider using data.json to store some data such as url
     '''
+
 
 async def setup(bot):
     await bot.add_cog(Main(bot))
