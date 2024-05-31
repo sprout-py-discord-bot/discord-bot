@@ -6,6 +6,9 @@ from datetime import datetime
 
 
 class Main(Cog_Extension):
+    def __init__(self, bot):
+        super().__init__(bot)
+        self.to_do_list = {}
 
     @commands.command()
     async def Hello(self, ctx):
@@ -45,8 +48,8 @@ class Main(Cog_Extension):
         elif action == 'remove':
             if item != 'all':
                 if item != None:
-                    if item in self.to_do_list:
-                        self.to_do_list.remove(item)
+                    if item in self.to_do_list[ctx.author.id]:
+                        self.to_do_list[ctx.author.id].pop(item)
                         await ctx.send('success')
                     else:
                         await ctx.send(f'{item} not in to do list')
