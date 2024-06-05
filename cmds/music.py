@@ -8,6 +8,18 @@ from bs4 import BeautifulSoup
 import json
 import re
 
+'''
+play url 播放音樂
+playlist play 開始播放播放清單的歌曲
+         add url 將url添加至清單
+         remove url 將url從清單刪除
+                None/all 清空清單
+         insert url way 將url插入至撥放清單第way項(code:way-1,實際:way)
+         print 輸出
+search name None 搜尋曲名並加至清單
+            way 搜尋取名並insert
+'''
+
 
 class Music(Cog_Extension):
     def __init__(self, bot):
