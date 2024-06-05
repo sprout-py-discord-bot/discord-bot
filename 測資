@@ -12,30 +12,31 @@ $Todolist print
   item  : date
   hello : 2024/06/12```
 $Todolist add test 2024/01/32
-->success
+->date is unavailable
 $Todolist print
 ->```yaml
   item  : date
-  hello : '2024/06/12'
-  test  : '2024/01/32'```
+  hello : '2024/06/12'```
+$Todolist add test 2024/01/31
+->success
 $Todolist time
 ->success
 $Todolist print
 ->```yaml
   item  : date
-  test  : '2024/01/32'
+  test  : '2024/01/31'
   hello : '2024/06/12'```
 $Todolist sort
 ->```yaml
   item  : date
   hello : '2024/06/12'
-  test  : '2024/01/32'```
+  test  : '2024/01/31'```
 $Todolist remove hello
 ->success
 $Todolist print
 ->```yaml
   item : date
-  test : '2024/01/32'```
+  test : '2024/01/31'```
 $Todolist remove hello
 ->hello not in to do list
 $Todolist remove/$Todolist remove all
