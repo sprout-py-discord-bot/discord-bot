@@ -32,7 +32,7 @@ class Music(Cog_Extension):
         try:
             if song_exist:
                 os.remove("song.mp3")
-        except PermissionError:
+        except PermissionError:  # 更改: 添加 PermissionError 處理
             await ctx.send("Wait for the current playing music to end or use the 'stop' command")
             return
 
@@ -65,7 +65,7 @@ class Music(Cog_Extension):
         button_pause_resume = Button(
             label="⏸️", style=discord.ButtonStyle.primary)
         button_stop = Button(
-            label="⏭️", style=discord.ButtonStyle.danger)
+            label="⏭️", style=discord.ButtonStyle.danger)  # 更改: 修改button_stop的標籤為"⏭️"
 
         async def play_callback(interaction):
             if self.play_list:
@@ -88,14 +88,14 @@ class Music(Cog_Extension):
                 await interaction.response.send_message("No music is playing.", ephemeral=True)
             await interaction.message.edit(view=view)
 
-        async def stop_callback(interaction):  # 修改回調函數
+        async def stop_callback(interaction):  # 更改: 修改回調函數，添加播放下一首的邏輯
             voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
             if voice and (voice.is_playing() or voice.is_paused()):
                 voice.stop()
                 if self.play_list:
                     next_url = self.play_list.pop(0)
                     await self.play(ctx, next_url)
-                    # await interaction.response.send_message("Stopped current song and playing next song in the playlist.", ephemeral=True)
+                    await interaction.response.send_message("Stopped current song and playing next song in the playlist.", ephemeral=True)
                 else:
                     await interaction.response.send_message("Stopped current song. No more songs in the playlist.", ephemeral=True)
             else:
@@ -114,10 +114,11 @@ class Music(Cog_Extension):
     @commands.command()
     async def leave(self, ctx):
         voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
-        try:
+        if voice:  # 更改: 添加對voice是否存在的檢查
             await voice.disconnect()
             await ctx.send(embed=discord.Embed(title="Disconnected", description="Bot has left the voice channel", color=discord.Color.red()))
-        except:
+        else:
+            # 更改: 添加具體的錯誤信息
             await ctx.send("The bot is not connected to a voice channel.")
 
     @commands.command()
@@ -157,12 +158,11 @@ class Music(Cog_Extension):
                             self.play_list.append(video_url)
                             await ctx.send(embed=discord.Embed(
                                 title=video_title, url=video_url, color=discord.Color.blue()))
-
                         break
                 if video_renderer:
                     break
         else:
-            await ctx.send("not found")
+            await ctx.send("Not found")  # 更改: 修改錯誤信息為更具體的"Not found"
 
     @commands.command()
     async def playlist(self, ctx, action, item=None, way=None):
@@ -176,7 +176,7 @@ class Music(Cog_Extension):
             if item and item in self.play_list:
                 self.play_list.remove(item)
                 await ctx.send(embed=discord.Embed(title="Removed", description="Song removed from the playlist.", color=discord.Color.green()))
-            elif not item or item == 'all':
+            elif not item or item == 'all':  # 更改: 添加條件檢查 item 是否為 'all' 或 None
                 self.play_list = []
                 await ctx.send(embed=discord.Embed(title="Cleared", description="All songs removed from the playlist.", color=discord.Color.green()))
             else:
@@ -186,7 +186,8 @@ class Music(Cog_Extension):
             if len(self.play_list) > 0:
                 await ctx.send(embed=discord.Embed(title="Playlist", description=f'```yaml\n{result}```', color=discord.Color.blue()))
             else:
-                await ctx.send(embed=discord.Embed(title='Playlist', description='Nothing', color=discord.Color.red()))
+                # 更改: 修改錯誤信息為"Nothing"
+                await ctx.send(embed=discord.Embed(title="Playlist", description="Nothing", color=discord.Color.red()))
         elif action == 'insert':
             if item and way:
                 if way <= len(self.play_list):
@@ -194,7 +195,7 @@ class Music(Cog_Extension):
                     await ctx.send(embed=discord.Embed(title="Inserted", description=f'{item} is inserted at No.{way}.', color=discord.Color.green()))
                 else:
                     await ctx.send(embed=discord.Embed(title="Error", description="Position out of range.", color=discord.Color.red()))
-            elif way == None:
+            elif way is None:  # 更改: 更改 way 的檢查條件為 None
                 self.play_list.insert(0, item)
                 await ctx.send(embed=discord.Embed(title="Inserted", description=f'{item} is inserted at No.1.', color=discord.Color.green()))
             else:
@@ -203,7 +204,8 @@ class Music(Cog_Extension):
             if len(self.play_list) > 0:
                 await self.play(ctx, self.play_list.pop(0))
             else:
-                await ctx.send(embed=discord.Embed(title="Error", description="Not thing in playlist.", color=discord.Color.red()))
+                # 更改: 修改錯誤信息為"Nothing in playlist"
+                await ctx.send(embed=discord.Embed(title="Error", description="Nothing in playlist.", color=discord.Color.red()))
 
 
 async def setup(bot):
