@@ -32,8 +32,9 @@ class Music(Cog_Extension):
         try:
             if song_exist:
                 os.remove("song.mp3")
-        except PermissionError:  # 更改: 添加 PermissionError 處理
+        except PermissionError:
             await ctx.send("Wait for the current playing music to end or use the 'stop' command")
+            await ctx.send(embed=discord.Embed(title="Success", description="Wait for the current playing music to end or use the 'stop' command", color=discord.Color.red()))
             return
 
         os.system(
@@ -49,30 +50,63 @@ class Music(Cog_Extension):
         for file in os.listdir("./"):
             if file.endswith(".mp3"):
                 os.rename(file, "song.mp3")
-
-        def play_next(_):
-            if len(self.play_list) > 0:
-                next_url = self.play_list.pop(0)
-                ctx.bot.loop.create_task(self.play(ctx, next_url))
-
         voice.play(discord.FFmpegPCMAudio(
-            executable='ffmpeg.exe', source="song.mp3"), after=play_next)
+            executable='ffmpeg.exe', source="song.mp3"))
         await ctx.send(embed=discord.Embed(title="Now Playing", description=url, color=discord.Color.blue()), view=self.create_controls(ctx))
+
+    @commands.command()
+    async def stop(self, ctx):
+        voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
+        try:
+            voice.stop()
+        except:
+            await ctx.send(embed=discord.Embed(title="Error", description="Bot is not connected to a voice channel.", color=discord.Color.red()))
 
     def create_controls(self, ctx):
         view = View()
+        ps = Button(label='⏸️', style=discord.ButtonStyle.red)
+        leave = Button(label='⏏️', style=discord.ButtonStyle.blurple)
+
+        async def ps_callback(interaction):
+            voice = discord.utils.get(
+                self.bot.voice_clients, guild=interaction.guild)
+            if voice and voice.is_playing():
+                voice.pause()
+                ps.label = "▶️"
+                ps.style = discord.ButtonStyle.green
+                await interaction.response.send_message(embed=discord.Embed(title='Success', description='Song is paused', color=discord.Color.green()))
+            elif voice and voice.is_paused():
+                voice.resume()
+                ps.label = "⏸️"
+                ps.style = discord.ButtonStyle.red
+                await interaction.response.send_message(embed=discord.Embed(title='Success', description='Song is resumed', color=discord.Color.green()))
+            else:
+                await interaction.response.send_message(embed=discord.Embed(title='Error', description='No song is playing', color=discord.Color.red()))
+
+            await interaction.message.edit(view=view)
+
+        async def leave_callback(interaction):
+            voice = discord.utils.get(
+                self.bot.voice_clients, guild=interaction.guild)
+            if voice:
+                await voice.disconnect()
+                await interaction.response.send_message(embed=discord.Embed(title='Success', description='Bot left the voice channel.', color=discord.Color.green()))
+            else:
+                await interaction.response.send_message(embed=discord.Embed(title='Error', description='Bot is not connected to a voice channel.', color=discord.Color.red()))
+
+        ps.callback = ps_callback
+        leave.callback = leave_callback
+
+        view.add_item(ps)
+        view.add_item(leave)
+
+        return view
+        '''
         button_play = Button(label="▶️", style=discord.ButtonStyle.green)
         button_pause_resume = Button(
             label="⏸️", style=discord.ButtonStyle.primary)
         button_stop = Button(
             label="⏭️", style=discord.ButtonStyle.danger)  # 更改: 修改button_stop的標籤為"⏭️"
-
-        async def play_callback(interaction):
-            if self.play_list:
-                await self.play(ctx, self.play_list.pop(0))
-                await interaction.response.send_message("Playing next song in the playlist.", ephemeral=True)
-            else:
-                await interaction.response.send_message("No songs in the playlist.", ephemeral=True)
 
         async def pause_resume_callback(interaction):
             voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
@@ -95,7 +129,6 @@ class Music(Cog_Extension):
                 if self.play_list:
                     next_url = self.play_list.pop(0)
                     await self.play(ctx, next_url)
-                    await interaction.response.send_message("Stopped current song and playing next song in the playlist.", ephemeral=True)
                 else:
                     await interaction.response.send_message("Stopped current song. No more songs in the playlist.", ephemeral=True)
             else:
@@ -110,7 +143,7 @@ class Music(Cog_Extension):
         view.add_item(button_stop)
 
         return view
-
+        '''
     @commands.command()
     async def leave(self, ctx):
         voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
@@ -176,7 +209,7 @@ class Music(Cog_Extension):
             if item and item in self.play_list:
                 self.play_list.remove(item)
                 await ctx.send(embed=discord.Embed(title="Removed", description="Song removed from the playlist.", color=discord.Color.green()))
-            elif not item or item == 'all':  # 更改: 添加條件檢查 item 是否為 'all' 或 None
+            elif not item or item == 'all':
                 self.play_list = []
                 await ctx.send(embed=discord.Embed(title="Cleared", description="All songs removed from the playlist.", color=discord.Color.green()))
             else:
@@ -186,16 +219,15 @@ class Music(Cog_Extension):
             if len(self.play_list) > 0:
                 await ctx.send(embed=discord.Embed(title="Playlist", description=f'```yaml\n{result}```', color=discord.Color.blue()))
             else:
-                # 更改: 修改錯誤信息為"Nothing"
                 await ctx.send(embed=discord.Embed(title="Playlist", description="Nothing", color=discord.Color.red()))
         elif action == 'insert':
             if item and way:
-                if way <= len(self.play_list):
-                    self.play_list.insert(way-1, item)
+                if int(way) <= len(self.play_list):
+                    self.play_list.insert(int(way)-1, item)
                     await ctx.send(embed=discord.Embed(title="Inserted", description=f'{item} is inserted at No.{way}.', color=discord.Color.green()))
                 else:
                     await ctx.send(embed=discord.Embed(title="Error", description="Position out of range.", color=discord.Color.red()))
-            elif way is None:  # 更改: 更改 way 的檢查條件為 None
+            elif way is None:
                 self.play_list.insert(0, item)
                 await ctx.send(embed=discord.Embed(title="Inserted", description=f'{item} is inserted at No.1.', color=discord.Color.green()))
             else:
@@ -204,7 +236,6 @@ class Music(Cog_Extension):
             if len(self.play_list) > 0:
                 await self.play(ctx, self.play_list.pop(0))
             else:
-                # 更改: 修改錯誤信息為"Nothing in playlist"
                 await ctx.send(embed=discord.Embed(title="Error", description="Nothing in playlist.", color=discord.Color.red()))
 
 
