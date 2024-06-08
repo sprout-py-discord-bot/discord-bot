@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import json
 import re
 
+
 '''
 play url 播放音樂
 playlist play 開始播放播放清單的歌曲
@@ -25,9 +26,11 @@ class Music(Cog_Extension):
     def __init__(self, bot):
         super().__init__(bot)
         self.play_list = []
+        self.is_next = True
 
     @commands.command()
     async def play(self, ctx, url):
+        self.is_next = True
         song_exist = os.path.isfile("song.mp3")
         try:
             if song_exist:
@@ -50,10 +53,20 @@ class Music(Cog_Extension):
         for file in os.listdir("./"):
             if file.endswith(".mp3"):
                 os.rename(file, "song.mp3")
-        voice.play(discord.FFmpegPCMAudio(
-            executable='ffmpeg.exe', source="song.mp3"))
-        await ctx.send(embed=discord.Embed(title="Now Playing", description=url, color=discord.Color.blue()), view=self.create_controls(ctx))
 
+        async def play_next():
+            if self.is_next and self.play_list:
+                next_url = self.play_list.pop(0)
+                await self.play(ctx, next_url)
+
+        def after_playing(_):
+            coro = play_next()
+            self.bot.loop.create_task(coro)
+
+        voice.play(discord.FFmpegPCMAudio(
+            executable='ffmpeg.exe', source="song.mp3"), after=after_playing)
+        await ctx.send(embed=discord.Embed(title="Now Playing", description=url, color=discord.Color.blue()), view=self.create_controls(ctx))
+    '''
     @commands.command()
     async def stop(self, ctx):
         voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
@@ -61,10 +74,13 @@ class Music(Cog_Extension):
             voice.stop()
         except:
             await ctx.send(embed=discord.Embed(title="Error", description="Bot is not connected to a voice channel.", color=discord.Color.red()))
+    '''
 
     def create_controls(self, ctx):
         view = View()
         ps = Button(label='⏸️', style=discord.ButtonStyle.red)
+        button_stop = Button(
+            label="⏭️", style=discord.ButtonStyle.blurple)
         leave = Button(label='⏏️', style=discord.ButtonStyle.blurple)
 
         async def ps_callback(interaction):
@@ -85,7 +101,22 @@ class Music(Cog_Extension):
 
             await interaction.message.edit(view=view)
 
+        async def stop(interaction):
+            voice = discord.utils.get(
+                self.bot.voice_clients, guild=interaction.guild)
+            try:
+                if voice:
+                    voice.stop()
+                    await interaction.response.send_message(embed=discord.Embed(title='Success', description='Song is stopped', color=discord.Color.green()))
+                else:
+                    await interaction.response.send_message(embed=discord.Embed(title='Error', description='Bot is not connected to a voice channel.', color=discord.Color.red()))
+            except discord.errors.NotFound:
+                await interaction.followup.send(embed=discord.Embed(title='Error', description='Interaction not found or expired.', color=discord.Color.red()))
+            except Exception as e:
+                await interaction.followup.send(embed=discord.Embed(title='Error', description=f'An unexpected error occurred: {str(e)}', color=discord.Color.red()))
+
         async def leave_callback(interaction):
+            self.is_next = False
             voice = discord.utils.get(
                 self.bot.voice_clients, guild=interaction.guild)
             if voice:
@@ -95,9 +126,11 @@ class Music(Cog_Extension):
                 await interaction.response.send_message(embed=discord.Embed(title='Error', description='Bot is not connected to a voice channel.', color=discord.Color.red()))
 
         ps.callback = ps_callback
+        button_stop.callback = stop
         leave.callback = leave_callback
 
         view.add_item(ps)
+        view.add_item(button_stop)
         view.add_item(leave)
 
         return view
