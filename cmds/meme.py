@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import re
 import os
 '''
-gallery take name 要求discordbot傳出名字為name的梗圖
+meme take name 要求discordbot傳出名字為name的梗圖
      view 印出所有圖片名稱
      search name savekeyword/None 尋找name並下載搜尋的第一張圖，savekeyword==None->以name作為取出的keyword
                                                                else:savekeyword做為取出keyword     
@@ -79,7 +79,7 @@ class Meme(Cog_Extension):
                 result = '\n'.join(os.listdir('.\image'))
                 await ctx.send(embed=discord.Embed(title='file in image', description=f"```yaml\n{result}```", color=discord.Color.green()))
             else:
-                await ctx.send(embed=discor.Embed(title='file in image', description='```yaml\nnot found```'))
+                await ctx.send(embed=discor.Embed(title='file in image', description='```yaml\nnot found```', color=discord.Color.blue()))
         elif action == 'download':
             if not name:
                 await ctx.send(embed=discord.Embed(title='Error', description='name is a required argument that is missing.', color=discord.Color.red()))

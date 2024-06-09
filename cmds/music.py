@@ -36,8 +36,7 @@ class Music(Cog_Extension):
             if song_exist:
                 os.remove("song.mp3")
         except PermissionError:
-            await ctx.send("Wait for the current playing music to end or use the 'stop' command")
-            await ctx.send(embed=discord.Embed(title="Success", description="Wait for the current playing music to end or use the 'stop' command", color=discord.Color.red()))
+            await ctx.send(embed=discord.Embed(title="Error", description="Wait for the current playing music to end or use the 'stop' command", color=discord.Color.red()))
             return
 
         os.system(
@@ -66,15 +65,6 @@ class Music(Cog_Extension):
         voice.play(discord.FFmpegPCMAudio(
             executable='ffmpeg.exe', source="song.mp3"), after=after_playing)
         await ctx.send(embed=discord.Embed(title="Now Playing", description=url, color=discord.Color.blue()), view=self.create_controls(ctx))
-    '''
-    @commands.command()
-    async def stop(self, ctx):
-        voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
-        try:
-            voice.stop()
-        except:
-            await ctx.send(embed=discord.Embed(title="Error", description="Bot is not connected to a voice channel.", color=discord.Color.red()))
-    '''
 
     def create_controls(self, ctx):
         view = View()
@@ -134,58 +124,6 @@ class Music(Cog_Extension):
         view.add_item(leave)
 
         return view
-        '''
-        button_play = Button(label="▶️", style=discord.ButtonStyle.green)
-        button_pause_resume = Button(
-            label="⏸️", style=discord.ButtonStyle.primary)
-        button_stop = Button(
-            label="⏭️", style=discord.ButtonStyle.danger)  # 更改: 修改button_stop的標籤為"⏭️"
-
-        async def pause_resume_callback(interaction):
-            voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
-            if voice and voice.is_playing():
-                voice.pause()
-                button_pause_resume.label = "▶️"
-                await interaction.response.send_message("Paused the music.", ephemeral=True)
-            elif voice and voice.is_paused():
-                voice.resume()
-                button_pause_resume.label = "⏸️"
-                await interaction.response.send_message("Resumed the music.", ephemeral=True)
-            else:
-                await interaction.response.send_message("No music is playing.", ephemeral=True)
-            await interaction.message.edit(view=view)
-
-        async def stop_callback(interaction):  # 更改: 修改回調函數，添加播放下一首的邏輯
-            voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
-            if voice and (voice.is_playing() or voice.is_paused()):
-                voice.stop()
-                if self.play_list:
-                    next_url = self.play_list.pop(0)
-                    await self.play(ctx, next_url)
-                else:
-                    await interaction.response.send_message("Stopped current song. No more songs in the playlist.", ephemeral=True)
-            else:
-                await interaction.response.send_message("No music is playing.", ephemeral=True)
-
-        button_play.callback = play_callback
-        button_pause_resume.callback = pause_resume_callback
-        button_stop.callback = stop_callback
-
-        view.add_item(button_play)
-        view.add_item(button_pause_resume)
-        view.add_item(button_stop)
-
-        return view
-        '''
-    @commands.command()
-    async def leave(self, ctx):
-        voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
-        if voice:  # 更改: 添加對voice是否存在的檢查
-            await voice.disconnect()
-            await ctx.send(embed=discord.Embed(title="Disconnected", description="Bot has left the voice channel", color=discord.Color.red()))
-        else:
-            # 更改: 添加具體的錯誤信息
-            await ctx.send("The bot is not connected to a voice channel.")
 
     @commands.command()
     async def search(self, ctx, name, way=None):
@@ -228,7 +166,8 @@ class Music(Cog_Extension):
                 if video_renderer:
                     break
         else:
-            await ctx.send("Not found")  # 更改: 修改錯誤信息為更具體的"Not found"
+            await ctx.send(embed=discord.Embed(
+                title='Error', description='Not found', color=discord.Color.red()))
 
     @commands.command()
     async def playlist(self, ctx, action, item=None, way=None):
