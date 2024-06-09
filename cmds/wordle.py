@@ -1,13 +1,14 @@
 from mimetypes import guess_extension
 import discord
 from discord.ext import commands
-import json 
+import json
 from config import *
 from core import Cog_Extension
 from random import randint
 from bs4 import BeautifulSoup
 import requests as rq
 from discord import app_commands
+
 
 class Wordle(Cog_Extension):
     """
@@ -17,18 +18,17 @@ class Wordle(Cog_Extension):
         wordle (ctx): 開啟一場新的WordleGame
         guess (ctx): 猜單字
         end (ctx): 結束當前的WordleGame
-    
+
     """
-
-
 
     def __init__(self, bot):
         # Call the parent's constructor
         super().__init__(bot)
         # Load the word list
-        raw_html = rq.get("https://www.wordunscrambler.net/word-list/wordle-word-list").text
+        raw_html = rq.get(
+            "https://www.wordunscrambler.net/word-list/wordle-word-list").text
         word_doc = BeautifulSoup(raw_html, "html.parser")
-        word_list = word_doc.find_all(class_ = "invert light")
+        word_list = word_doc.find_all(class_="invert light")
         Wordle.word_list = list()
 
         for item in word_list:
@@ -37,37 +37,36 @@ class Wordle(Cog_Extension):
         # The dictionary for game ongoing
         self.game_dict = dict()
 
-
     @commands.command()
     async def wordle(self, ctx):
         user_id = ctx.author.id
         if not user_id in self.game_dict:
             self.game_dict[user_id] = WordleGame()
-            await ctx.send("The game has started! You have 6 chances, use **$guess [word]** to guess some words!")
+            await ctx.send(embed=discord.Embed(title='start', description="The game has started! You have 6 chances, use **$guess [word]** to guess some words!", color=discord.Color.green()))
         else:
-            await ctx.send("The current game has not ended yet, use **$end** to end the current game.")
-        
-        
+            await ctx.send(embed=discord.Embed(title='Error', description="The current game has not ended yet, use **$end** to end the current game.", color=discord.Color.red()))
+
     @commands.command()
     async def guess(self, ctx, guesses: str):
         user_id = ctx.author.id
         if not user_id in self.game_dict:
-            await ctx.send("The game hasn't started yet. Consider using **$wordle** to start a game.")
+            await ctx.send(embed=discord.Embed(title='Error', description="The game hasn't started yet. Consider using **$wordle** to start a game.", color=discord.Color.red()))
         result = self.game_dict[user_id].guess(guesses)
 
         await ctx.message.delete()
 
-        await ctx.send(result[1])
+        await ctx.send(embed=discord.Embed(title='Result', description=result[1], color=discord.Color.blue()))
         if result[0] == GAME_OVER:
             self.game_dict.pop(user_id)
 
     @commands.command()
     async def end(self, ctx):
-        user_id = ctx.author.id        
+        user_id = ctx.author.id
         answer = self.game_dict[user_id].answer
         self.game_dict.pop(user_id)
-        await ctx.send(f"The current game has been terminated, the answer is **{answer}**")
-    
+        await ctx.send(embed=discord.Embed(title='End', description=f"The current game has been terminated, the answer is **{answer}**", color=discord.Color.blue()))
+
+
 class WordleGame():
     """
     Attributes:
@@ -75,14 +74,14 @@ class WordleGame():
         count (int): 目前猜了幾次
         answer (str): 答案的單字
         history (list[str]): 儲存猜測的結果（不儲存不符合規定的）
-        
+
     Methods:
         guess(guesses) -> Tuple(int, discord.Embed): 以Embed形式回傳猜測的結果 -- WIP -- 暫時使用字串回傳
-    
+
     """
 
     def __init__(self) -> None:
-        
+
         # Attributes for the game itself
         self.word_count = len(Wordle.word_list) - 1
         self.count = 0
@@ -96,10 +95,6 @@ class WordleGame():
             else:
                 self.word_composition[letter] += 1
 
-
-
-
-    
     def guess(self, guesses):
         if guesses == self.answer:
             return (GAME_OVER, f"Congrats! The answer is indeed **{guesses}**")
@@ -109,18 +104,18 @@ class WordleGame():
                 return (CONTINUE, "The word has to be exactly 5 letters long.")
             elif guesses not in Wordle.word_list:
                 return (CONTINUE, f"Unfortunately, **{guesses}** is not in the word list.")
-            
+
             # Compare the guess to the answer
             output = ""
             occurance = dict()
 
             for i in range(len(guesses)):
-                if guesses[i] in self.answer :
+                if guesses[i] in self.answer:
                     if not guesses[i] in occurance:
                         occurance[guesses[i]] = 1
                     else:
                         occurance[guesses[i]] += 1
-                        
+
                     if guesses[i] == self.answer[i]:
                         output += ":green_square: "
                     elif occurance[guesses[i]] <= self.word_composition[guesses[i]]:
@@ -133,7 +128,7 @@ class WordleGame():
             for i in range(len(guesses)):
                 output += f":regional_indicator_{guesses[i]}: "
             self.history.append(output)
-            
+
             self.count += 1
             if self.count == 6:
                 return (CONTINUE, output + f"\nGame Over! You've run out of all 6 attempts.\nThe correct answer is {self.answer}.")
@@ -141,7 +136,7 @@ class WordleGame():
             output += f"\n{6 - self.count} guess(es) left!"
 
             return (CONTINUE, output)
-            
+
 
 async def setup(bot):
     await bot.add_cog(Wordle(bot))
