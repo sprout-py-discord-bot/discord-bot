@@ -91,14 +91,15 @@ class Main(Cog_Extension):
         elif action == 'sort':
             self.to_do_list[ctx.author.id] = dict(
                 sorted(self.to_do_list[ctx.author.id].items()))
-            await ctx.send(embed=discord.Embed(title='success', description=f'Todolist is sorted', color=discord.Color.green()))
+            await self.Todolist(ctx, 'print')
 
         elif action == 'time':
             sorted_keys = sorted(
                 self.to_do_list[ctx.author.id], key=lambda x: self.sort_by_date(ctx, x))
             self.to_do_list[ctx.author.id] = {
                 key: self.to_do_list[ctx.author.id][key] for key in sorted_keys}
-            await ctx.send(embed=discord.Embed(title='success', description=f'Todolist is sorted by time', color=discord.Color.green()))
+            await self.Todolist(ctx, 'print')
+            # await ctx.send(embed=discord.Embed(title='success', description=f'Todolist is sorted by time', color=discord.Color.green()))
 
     def sort_by_date(self, ctx, key):
         year, month, day = map(int, self.to_do_list[ctx.author.id][key])
@@ -110,6 +111,13 @@ class Main(Cog_Extension):
             return True
         except ValueError:
             return False
+
+    '''
+    TODO
+    Add the necessary bot commands here
+    Consider using data.json to store some data such as url
+    '''
+
 
 async def setup(bot):
     await bot.add_cog(Main(bot))
