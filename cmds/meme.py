@@ -22,7 +22,7 @@ class Meme(Cog_Extension):
         self.memes_name = {}
 
     @commands.command()
-    async def meme(self, ctx, action, name=None, savekeyword=None):
+    async def gallery(self, ctx, action, name=None, savekeyword=None):
         if action == 'take':
             is_find = False
             if name:
