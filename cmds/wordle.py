@@ -51,6 +51,7 @@ class Wordle(Cog_Extension):
         user_id = ctx.author.id
         if not user_id in self.game_dict:
             await ctx.send(embed=discord.Embed(title='Error', description="The game hasn't started yet. Consider using **$wordle** to start a game.", color=discord.Color.red()))
+            return
         result = self.game_dict[user_id].guess(guesses)
 
         await ctx.message.delete()
@@ -61,6 +62,10 @@ class Wordle(Cog_Extension):
 
     @commands.command()
     async def end(self, ctx):
+        user_id = ctx.author.id
+        if not user_id in self.game_dict:
+            await ctx.send(embed=discord.Embed(title='Error', description="The game hasn't started yet. Consider using **$wordle** to start a game.", color=discord.Color.red()))
+            return
         user_id = ctx.author.id
         answer = self.game_dict[user_id].answer
         self.game_dict.pop(user_id)
@@ -131,7 +136,7 @@ class WordleGame():
 
             self.count += 1
             if self.count == 6:
-                return (CONTINUE, output + f"\nGame Over! You've run out of all 6 attempts.\nThe correct answer is {self.answer}.")
+                return (GAME_OVER, output + f"\nGame Over! You've run out of all 6 attempts.\nThe correct answer is {self.answer}.")
 
             output += f"\n{6 - self.count} guess(es) left!"
 
