@@ -1,3 +1,5 @@
 # Wordle
 CONTINUE = 0
 GAME_OVER = 1
+ISSUE = 2
+CORRECT = 3

@@ -79,7 +79,7 @@ class Meme(Cog_Extension):
                 result = '\n'.join(os.listdir('.\image'))
                 await ctx.send(embed=discord.Embed(title='file in image', description=f"```yaml\n{result}```", color=discord.Color.green()))
             else:
-                await ctx.send(embed=discor.Embed(title='file in image', description='```yaml\nnot found```', color=discord.Color.blue()))
+                await ctx.send(embed=discord.Embed(title='file in image', description='```yaml\nnot found```', color=discord.Color.blue()))
         elif action == 'download':
             if not name:
                 await ctx.send(embed=discord.Embed(title='Error', description='name is a required argument that is missing.', color=discord.Color.red()))
