@@ -65,11 +65,11 @@ class AbacusInstance():
         for i in range(0, 3):
             embed_list.append(discord.Embed(title = title[i]))
             for j in range(0, 10):
-                if answer[i][j] == self.problem_set[i][j]:
+                if answer[i][j] == self.problem_set[i][j].answer:
                     score += 10 - 5 * min(1, i)
                 else:
                     answer[i][j] = f"**{answer[i][j]}**"
-            embed_list[i].add_field(name = "你的答案", value = "\n".join(answer[i]))
+            embed_list[i].add_field(name = "你的答案", value = "\n".join([str(answer[i][m]) for m in range(0, 10)]))
             embed_list[i].add_field(name = "正確答案", value = "\n".join([str(self.problem_set[i][m].answer) for m in range(0, 10)]))
         return (embed_list, score)
         
@@ -99,8 +99,10 @@ class AbacusProblem():
         if to_shuffle:
             shuffle(digit)
         index = 1
-        for _ in range(0, minus):
-            index += randint(1, (len(digit) - 1) // minus)
+        print(minus)
+        for i in range(0, minus, 1):
+            index += randint(1, (len(digit) - 1) // minus - 1)
+            print(index)
             digit[index] *= -1
 
         for item in digit:
