@@ -19,7 +19,7 @@ class Abacus(Cog_Extension):
     async def abacus(self, ctx, abacus: str, level: int):
         user_id = ctx.author.id
         if user_id not in self.instances:
-            if abacus != "abacus" or abacus != "mental":
+            if abacus != "abacus" and abacus != "mental":
                 await ctx.send(embed = discord.Embed(title = "格式錯誤", description = "**$abacus [abacus|mental] [level]**"))
                 return
             else:
@@ -51,13 +51,6 @@ class Abacus(Cog_Extension):
         else:
             self.instances.pop(user_id)
             await ctx.send(embed = discord.Embed(title="成功", description="成功離開當前測驗。"))
-        
-
-
-
-
-
-
 
 class AbacusInstance():
     def __init__(self, category: str, context: dict):
@@ -75,7 +68,7 @@ class AbacusInstance():
         self.answer.append(answer)
         self.count += 1
         return self.problem_set[self.count // 10][self.count % 10].question
-    def finish(self, answer, user_id):
+    def finish(self, answer):
         curr_time = time.time()
         time_spent = int(curr_time - self.time)
         title = ["加減算", "乘算", "除算"]
@@ -92,25 +85,6 @@ class AbacusInstance():
                     answer[i][j] = f"**{answer[i][j]}**"
             embed_list[i].add_field(name = "你的答案", value = "\n".join([str(answer[i][m]) for m in range(0, 10)]))
             embed_list[i].add_field(name = "正確答案", value = "\n".join([str(self.problem_set[i][m].answer) for m in range(0, 10)]))
-
-        # update the database
-        """
-        con = sqlite3.connect("user_data.db")
-        cur = con.cursor()
-        res = cur.execute(f"SELECT * FROM abacus_data WHERE user_id = {user_id}")
-        if res.fetchone() == None:
-            if self.category == "abacus":
-                # (user_id, men_count, men_tscore, men_ttime, men_btime, aba_count, aba_tscore, aba_ttime)
-                cur.execute(f"INSERT INTO abacus_data 
-                            VALUES ({user_id}, 0, 0, 0, 0, 1, {score}, {time_spent}, {score});")
-            else:
-                cur.execute(f"INSERT INTO abacus_data 
-                            VALUES ({user_id}, 1, {score}, {time_spent}, {time_spent}, 0, 0, 0, 0);")
-            con.commit()
-            con.close()
-        else:
-            ori_data = res.fetchone()
-        """
 
         return (embed_list, score, time_spent // 60, time_spent % 60)
         
@@ -136,17 +110,22 @@ class AbacusProblem():
         else:
             self.division(context[category]["除算"][randint(0, len(context[category]["除算"]) - 1)])
 
-    def plus(self, digit: list, minus: int, decimal = False, to_shuffle = False):
+    def plus(self, digit: list, minus: int, decimal = False, to_shuffle = False, first = True):
         if to_shuffle:
             shuffle(digit)
         index = 1
         print(minus)
         for i in range(0, minus, 1):
+            if not first:
+                break
             index += randint(1, (len(digit) - 1) // minus - 1)
             print(index)
             digit[index] *= -1
 
         for item in digit:
+            if self.answer < 0:
+                self.plus(digit, minus, decimal, to_shuffle, False)
+                return
             if item < 0:
                 number = randint(10 ** abs(item), 10 ** (abs(item) + 1) - 1)
                 number *= -1
