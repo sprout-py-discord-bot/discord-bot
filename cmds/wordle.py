@@ -87,7 +87,7 @@ class Wordle(Cog_Extension):
             self.game_dict.pop(user_id)
 
     @commands.command()
-    async def end(self, ctx):
+    async def wordleEnd(self, ctx):
         user_id = ctx.author.id
         if not user_id in self.game_dict:
             await ctx.send(embed=discord.Embed(title='Error', description="The game hasn't started yet. Consider using **$wordle** to start a game.", color=discord.Color.red()))
@@ -158,12 +158,11 @@ class WordleGame():
         word_count (int): 單字庫的列表長度
         count (int): 目前猜了幾次
         answer (str): 答案的單字
-        history (list[str]): 儲存猜測的結果（不儲存不符合規定的）
-        word_composition (dict): 單字組成。
-        message (int): 每個Instance的訊息的ID，在第一次猜測時初始化。
+        history (list[str]): 儲存所有合法的猜測
+        message (int): 每個Instance的訊息的ID, 在第一次猜測時初始化
 
     Methods:
-        guess(guesses) -> Tuple(int, discord.Embed): 以Embed形式回傳猜測的結果 -- WIP -- 暫時使用字串回傳
+        guess(guesses) -> Tuple(int, discord.Embed): 以Embed形式回傳猜測的結果
 
     """
 
@@ -174,14 +173,7 @@ class WordleGame():
         self.count = 0
         self.answer = Wordle.word_list[randint(0, self.word_count)]
         self.history = list()
-        self.word_composition = dict()
         self.message = None
-
-        for letter in self.answer:
-            if not letter in self.word_composition:
-                self.word_composition[letter] = 1
-            else:
-                self.word_composition[letter] += 1
 
     def guess(self, guesses):
         # Check illegal input
@@ -219,7 +211,7 @@ class WordleGame():
             return (GAME_OVER, output)
 
         #output += f"\n{6 - self.count} guess(es) left!"
-        return (CONTINUE, output, None)
+        return (CONTINUE, output)
 
 
 async def setup(bot):
