@@ -63,7 +63,7 @@ class Music(Cog_Extension):
             self.bot.loop.create_task(coro)
 
         voice.play(discord.FFmpegPCMAudio(
-            executable='ffmpeg.exe', source="song.mp3"), after=after_playing)
+            executable='ffmpeg.exe', source="song.mp3"), after=after_playing())
         await ctx.send(embed=discord.Embed(title="Now Playing", description=url, color=discord.Color.blue()), view=self.create_controls(ctx))
 
     def create_controls(self):
