@@ -12,11 +12,10 @@ class Abacus(Cog_Extension):
         with open("data.json", "r", encoding = "utf-8") as f:
             self.context= json.load(f)
         self.instances = dict()
-        print(len(self.context))
 
 
 
-    @commands.command()
+    @commands.hybrid_command()
     async def abacus(self, ctx, level: int):
         user_id = ctx.author.id
         if user_id not in self.instances:
@@ -36,8 +35,8 @@ class Abacus(Cog_Extension):
         else:
             await ctx.send(embed = discord.Embed(title = "失敗", description = "請先完成當前測驗。"))
     
-    @commands.command()
-    async def abacusSession(self, ctx, level: int, category: int):
+    @commands.hybrid_command()
+    async def abacus_session(self, ctx, level: int, category: int):
         user_id = ctx.author.id
         if user_id not in self.instances:
             if level < 0 or level > 10:
@@ -51,7 +50,7 @@ class Abacus(Cog_Extension):
         else:
             await ctx.send(embed = discord.Embed(title = "失敗", description = "請先完成當前測驗。"))
 
-    @commands.command()
+    @commands.hybrid_command()
     async def a(self, ctx, answer: float):
         user_id = ctx.author.id 
         if user_id not in self.instances:
@@ -69,8 +68,8 @@ class Abacus(Cog_Extension):
                 else:
                     await ctx.send(f"{ctx.author.name} 的結果\n分數：{result[1]}/200\n總花費時間：{result[2]}分{result[3]}秒", embeds = result[0])
                 self.instances.pop(user_id)
-    @commands.command()
-    async def abacusEnd(self, ctx):
+    @commands.hybrid_command()
+    async def abacus_end(self, ctx):
         user_id = ctx.author.id 
         if user_id not in self.instances:
             await ctx.send(embed = discord.Embed(title = "失敗", description = "測驗尚未開始. 使用 **$abacus [level]** 以開始測驗"))

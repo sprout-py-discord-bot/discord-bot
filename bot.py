@@ -29,5 +29,11 @@ async def unload(ctx, extension):
     await bot.unload_extension(f'cmds.{extension}')
     await ctx.send(f'Unloaded')
 
+@bot.command()
+async def sync(ctx):
+    commands = await bot.tree.sync()
+    output = "\n".join([item.name for item in commands])
+    await ctx.send("Sucessfully sync the following commands\n" + output)
+
 if  __name__ == "__main__":
     bot.run(os.getenv('TOKEN'))

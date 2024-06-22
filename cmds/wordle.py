@@ -1,28 +1,24 @@
 from math import floor
-from mimetypes import guess_all_extensions, guess_extension
 import sqlite3
 import discord
 from discord.ext import commands
-import json
 from config import *
 from core import Cog_Extension
 from random import randint
 from bs4 import BeautifulSoup
 import requests as rq
-from discord import app_commands
 
 
 class Wordle(Cog_Extension):
     """
     Attributes:
-        game_dict (dict): 儲存當前正在進行中的WordleGame, key為使用者ID
+        instances (dict): 儲存當前正在進行中的WordleGame, key為使用者ID
     Methods:
         wordle (ctx): 開啟一場新的WordleGame
         guess (ctx): 猜單字
         end (ctx): 結束當前的WordleGame
 
     """
-
     def __init__(self, bot):
         # Call the parent's constructor
         super().__init__(bot)
@@ -35,31 +31,34 @@ class Wordle(Cog_Extension):
         for item in word_list:
             Wordle.word_list.append(item.text[1:-1])
 
-        # The dictionary for game ongoing
-        self.game_dict = dict()
+        # The dictionary for sgame ongoing
+        self.instances = dict()
 
-    @commands.command()
+    @commands.hybrid_command()
     async def wordle(self, ctx):
         user_id = ctx.author.id
-        if not user_id in self.game_dict:
-            self.game_dict[user_id] = WordleGame()
+        if not user_id in self.instances:
+            self.instances[user_id] = WordleGame()
             await ctx.send(embed=discord.Embed(title='Wordle Time!', description="The game has started! You have 6 chances, use **$guess [word]** to guess some words!", color=discord.Color.green()))
         else:
             await ctx.send(embed=discord.Embed(title='Error', description="The current game has not ended yet, use **$end** to end the current game.", color=discord.Color.red()))
 
-    @commands.command()
+    @commands.hybrid_command()
     async def guess(self, ctx, guesses: str):
         user_id = ctx.author.id
-        if not user_id in self.game_dict:
+        if not user_id in self.instances:
             await ctx.send(embed=discord.Embed(title='Error', description="The game hasn't started yet. Consider using **$wordle** to start a game.", color=discord.Color.red()))
             return
         
-        instance = self.game_dict[user_id]
+        instance = self.instances[user_id]
 
         result = instance.guess(guesses)
 
-        await ctx.message.delete()
-
+        try:
+            await ctx.message.delete()
+        except discord.NotFound:
+            pass
+        
         # when game is still on
         if result[0] == ISSUE:
             embed = discord.Embed(title = f"Illegal guesses", description = result[1], color = discord.Color.red())
@@ -73,32 +72,32 @@ class Wordle(Cog_Extension):
             embed.description = f"Guesses left: {6 - instance.count}"
             embed.add_field(name = f"Attempt {instance.count}", value = result[1], inline = False)
             await instance.message.edit(embed = embed)
+            await ctx.send("Success.", ephemeral = True)
         
         # when game over
         if result[0] == CORRECT:
             embed = discord.Embed(title = f"You Win!", description = f"Congrats! The answer is indeed **{instance.answer}**.", color = discord.Color.yellow())
             await ctx.send(embed = embed)
             self.updateInfo(user_id, instance, CORRECT)
-            self.game_dict.pop(user_id)
+            self.instances.pop(user_id)
         if result[0] == GAME_OVER:
             embed = discord.Embed(title = f"Game Over", description = f"\nGame Over! You've run out of all 6 attempts.\nThe correct answer is **{instance.answer}**.", color = discord.Color.yellow())
             await ctx.send(embed = embed)
             self.updateInfo(user_id, instance, GAME_OVER)
-            self.game_dict.pop(user_id)
+            self.instances.pop(user_id)
 
-    @commands.command()
-    async def wordleEnd(self, ctx):
+    @commands.hybrid_command()
+    async def wordle_end(self, ctx):
         user_id = ctx.author.id
-        if not user_id in self.game_dict:
+        if not user_id in self.instances:
             await ctx.send(embed=discord.Embed(title='Error', description="The game hasn't started yet. Consider using **$wordle** to start a game.", color=discord.Color.red()))
             return
-        user_id = ctx.author.id
-        answer = self.game_dict[user_id].answer
-        self.game_dict.pop(user_id)
+        answer = self.instances[user_id].answer
+        self.instances.pop(user_id)
         await ctx.send(embed=discord.Embed(title='End', description=f"The current game has been terminated. The answer is **{answer}**", color=discord.Color.blue()))
 
-    @commands.command()
-    async def wordleInfo(self, ctx):
+    @commands.hybrid_command()
+    async def wordle_info(self, ctx):
         user_id = ctx.author.id 
         con = sqlite3.connect("user_data.db")
         cur = con.cursor()
@@ -162,7 +161,7 @@ class WordleGame():
         message (int): 每個Instance的訊息的ID, 在第一次猜測時初始化
 
     Methods:
-        guess(guesses) -> Tuple(int, discord.Embed): 以Embed形式回傳猜測的結果
+        guess(guesses) -> Tuple(int, str): 回傳猜測的結果
 
     """
 

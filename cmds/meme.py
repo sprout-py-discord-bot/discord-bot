@@ -19,9 +19,8 @@ meme take name 要求discordbot傳出名字為name的梗圖
 class Meme(Cog_Extension):
     def __init__(self, bot,):
         super().__init__(bot)
-        self.memes_name = {}
 
-    @commands.command()
+    @commands.hybrid_command()
     async def gallery(self, ctx, action, name=None, savekeyword=None):
         if action == 'take':
             is_find = False
@@ -39,7 +38,7 @@ class Meme(Cog_Extension):
             if name:
                 if name:
                     try:
-                        os.remove(f'image\{name}.jpg')
+                        os.remove(f'image/{name}.jpg')
                         await ctx.send(embed=discord.Embed(title='success', description=f'{name}.jpg has been removed', color=discord.Color.green()))
                     except:
                         await ctx.send(embed=discord.Embed(title='Error', description=f'{name}.jpg is not defined', color=discord.Color.red()))
@@ -51,7 +50,7 @@ class Meme(Cog_Extension):
             if name:
                 if savekeyword is None:
                     savekeyword = name
-                if f"{savekeyword}.jpg" in os.listdir('.\image'):
+                if f"{savekeyword}.jpg" in os.listdir('./image'):
                     await ctx.send(embed=discord.Embed(title='Error', description=f'Name {savekeyword}.jpg has used.Please remove {savekeyword}.jpg and tryagin', color=discord.Color.red()))
                 else:
                     link = f'https://www.google.com/search?hl=en&q={name}&tbm=isch'
@@ -71,12 +70,12 @@ class Meme(Cog_Extension):
                         with open(image_path, 'wb') as file:
                             file.write(image_response.content)
                         await ctx.send(embed=discord.Embed(title='Success', description=f'Image saved as {savekeyword}.jpg', color=discord.Color.green()))
-                        await ctx.send(file=discord.File(f'image\{savekeyword}.jpg'))
+                        await ctx.send(file=discord.File(f'image/{savekeyword}.jpg'))
             else:
                 await ctx.send(embed=discord.Embed(title='Error', description='name is a required argument that is missing.d', color=discord.Color.red()))
         elif action == 'view':
-            if len(os.listdir('.\image')) > 0:
-                result = '\n'.join(os.listdir('.\image'))
+            if len(os.listdir('./image')) > 0:
+                result = '\n'.join(os.listdir('./image'))
                 await ctx.send(embed=discord.Embed(title='file in image', description=f"```yaml\n{result}```", color=discord.Color.green()))
             else:
                 await ctx.send(embed=discord.Embed(title='file in image', description='```yaml\nnot found```', color=discord.Color.blue()))
@@ -84,7 +83,7 @@ class Meme(Cog_Extension):
             if not name:
                 await ctx.send(embed=discord.Embed(title='Error', description='name is a required argument that is missing.', color=discord.Color.red()))
                 return
-            if f"{name}.jpg" in os.listdir('.\image'):
+            if f"{name}.jpg" in os.listdir('./image'):
                 await ctx.send(embed=discord.Embed(title='Error', description=f'Name {name}.jpg has used.Please remove {name}.jpg and tryagin', color=discord.Color.red()))
                 return
             attachments = ctx.message.attachments
