@@ -58,7 +58,7 @@ class Music(Cog_Extension):
                 next_url = self.play_list.pop(0)
                 await self.play(ctx, next_url)
 
-        def after_playing(_):
+        def after_playing():
             coro = play_next()
             self.bot.loop.create_task(coro)
 

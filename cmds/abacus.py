@@ -184,7 +184,8 @@ class AbacusProblem():
         if even:
             minus = 0
         for _ in range(0, minus):
-            index += randint(1, (len(value) - 1) // minus - 1)
+            index += randint(1, (len(value) - 1) // minus)
+            if index >= (len(value) - 1): break
             value[index] *= -1
 
         for item in value:
