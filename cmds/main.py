@@ -10,12 +10,8 @@ class Main(Cog_Extension):
         super().__init__(bot)
         self.to_do_list = {}
 
-    @commands.command()
-    async def Hello(self, ctx):
-        await ctx.send("Hello, world")
-
-    @commands.command()
-    async def Todolist(self, ctx, action, item=None, time=None):
+    @commands.hybrid_command()
+    async def todolist(self, ctx, action, item=None, time=None):
         '''
         Todolist add item date新增一個事項到todolist
 
@@ -58,7 +54,7 @@ class Main(Cog_Extension):
                         self.to_do_list[ctx.author.id].pop(item)
                         await ctx.send(embed=discord.Embed(title='success', description=f'{item} is removed', color=discord.Color.green()))
                     else:
-                        await ctx.send(embed=discord.Embed(title='error', description=f'{item} not in Todolist', color=discord.Color.red()))
+                        await ctx.send(embed=discord.Embed(title='error', description=f'{item} is not in Todolist', color=discord.Color.red()))
                 else:
                     self.to_do_list[ctx.author.id] = {}
                     await ctx.send(embed=discord.Embed(title='success', description=f'Todolist is clear', color=discord.Color.green()))
@@ -91,14 +87,15 @@ class Main(Cog_Extension):
         elif action == 'sort':
             self.to_do_list[ctx.author.id] = dict(
                 sorted(self.to_do_list[ctx.author.id].items()))
-            await self.Todolist(ctx, 'print')
+            await self.todolist(ctx, 'print')
 
         elif action == 'time':
             sorted_keys = sorted(
                 self.to_do_list[ctx.author.id], key=lambda x: self.sort_by_date(ctx, x))
             self.to_do_list[ctx.author.id] = {
                 key: self.to_do_list[ctx.author.id][key] for key in sorted_keys}
-            await self.Todolist(ctx, 'print')
+            await self.todolist(ctx, 'print')
+            # await ctx.send(embed=discord.Embed(title='success', description=f'Todolist is sorted by time', color=discord.Color.green()))
 
     def sort_by_date(self, ctx, key):
         year, month, day = map(int, self.to_do_list[ctx.author.id][key])

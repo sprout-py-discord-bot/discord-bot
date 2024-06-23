@@ -7,21 +7,20 @@ from bs4 import BeautifulSoup
 import re
 import os
 '''
-gallery take name 要求discordbot傳出名字為name的梗圖
-        view 印出所有圖片名稱
-        search name savekeyword/None 尋找name並下載搜尋的第一張圖，savekeyword==None->以name作為取出的keyword
+meme take name 要求discordbot傳出名字為name的梗圖
+     view 印出所有圖片名稱
+     search name savekeyword/None 尋找name並下載搜尋的第一張圖，savekeyword==None->以name作為取出的keyword
                                                                else:savekeyword做為取出keyword     
-        remove name 刪除特定項目    
-        download name將照片下載並命名為name
+     remove name 刪除特定項目    
+     download name將照片下載並命名為name
 '''
 
 
 class Meme(Cog_Extension):
     def __init__(self, bot,):
         super().__init__(bot)
-        self.memes_name = {}
 
-    @commands.command()
+    @commands.hybrid_command()
     async def gallery(self, ctx, action, name=None, savekeyword=None):
         if action == 'take':
             is_find = False
@@ -37,18 +36,21 @@ class Meme(Cog_Extension):
                 await ctx.send(embed=discord.Embed(title='Error', description='name is a required argument that is missing.d', color=discord.Color.red()))
         elif action == 'remove':
             if name:
-                try:
-                    os.remove(f'image\{name}.jpg')
-                    await ctx.send(embed=discord.Embed(title='success', description=f'{name}.jpg has been removed', color=discord.Color.green()))
-                except:
-                    await ctx.send(embed=discord.Embed(title='Error', description=f'{name}.jpg is not defined', color=discord.Color.red()))
+                if name:
+                    try:
+                        os.remove(f'image/{name}.jpg')
+                        await ctx.send(embed=discord.Embed(title='success', description=f'{name}.jpg has been removed', color=discord.Color.green()))
+                    except:
+                        await ctx.send(embed=discord.Embed(title='Error', description=f'{name}.jpg is not defined', color=discord.Color.red()))
+                else:
+                    await ctx.send(embed=discord.Embed(title='Error', description='"name" object can\'t be None', color=discord.Color.red()))
             else:
                 await ctx.send(embed=discord.Embed(title='Error', description='name is a required argument that is missing.d', color=discord.Color.red()))
         elif action == 'search':
             if name:
                 if savekeyword is None:
                     savekeyword = name
-                if f"{savekeyword}.jpg" in os.listdir('.\image'):
+                if f"{savekeyword}.jpg" in os.listdir('./image'):
                     await ctx.send(embed=discord.Embed(title='Error', description=f'Name {savekeyword}.jpg has used.Please remove {savekeyword}.jpg and tryagin', color=discord.Color.red()))
                 else:
                     link = f'https://www.google.com/search?hl=en&q={name}&tbm=isch'
@@ -56,30 +58,32 @@ class Meme(Cog_Extension):
                     soup = BeautifulSoup(response.text, 'html.parser')
                     image_element = soup.find(
                         "img", {"src": re.compile("gstatic.com")})
+
                     if not image_element:
                         await ctx.send(embed=discord.Embed(title='Error', description='Not found', color=discord.Color.red()))
                     else:
                         image_url = image_element['src']
                         image_response = rq.get(image_url)
+
                         image_path = os.path.join(
                             'image', f'{savekeyword}.jpg')
                         with open(image_path, 'wb') as file:
                             file.write(image_response.content)
                         await ctx.send(embed=discord.Embed(title='Success', description=f'Image saved as {savekeyword}.jpg', color=discord.Color.green()))
-                        await ctx.send(file=discord.File(f'image\{savekeyword}.jpg'))
+                        await ctx.send(file=discord.File(f'image/{savekeyword}.jpg'))
             else:
                 await ctx.send(embed=discord.Embed(title='Error', description='name is a required argument that is missing.d', color=discord.Color.red()))
         elif action == 'view':
-            if len(os.listdir('.\image')) > 0:
-                result = '\n'.join(os.listdir('.\image'))
+            if len(os.listdir('./image')) > 0:
+                result = '\n'.join(os.listdir('./image'))
                 await ctx.send(embed=discord.Embed(title='file in image', description=f"```yaml\n{result}```", color=discord.Color.green()))
             else:
-                await ctx.send(embed=discor.Embed(title='file in image', description='```yaml\nnot found```', color=discord.Color.blue()))
+                await ctx.send(embed=discord.Embed(title='file in image', description='```yaml\nnot found```', color=discord.Color.blue()))
         elif action == 'download':
             if not name:
                 await ctx.send(embed=discord.Embed(title='Error', description='name is a required argument that is missing.', color=discord.Color.red()))
                 return
-            if f"{name}.jpg" in os.listdir('.\image'):
+            if f"{name}.jpg" in os.listdir('./image'):
                 await ctx.send(embed=discord.Embed(title='Error', description=f'Name {name}.jpg has used.Please remove {name}.jpg and tryagin', color=discord.Color.red()))
                 return
             attachments = ctx.message.attachments
