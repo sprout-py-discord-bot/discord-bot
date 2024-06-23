@@ -28,7 +28,7 @@ class Music(Cog_Extension):
         self.play_list = []
         self.is_next = True
 
-    @commands.hybrid_command()
+    @commands.command()
     async def play(self, ctx, url):
         self.is_next = True
         song_exist = os.path.isfile("song.mp3")
@@ -58,15 +58,15 @@ class Music(Cog_Extension):
                 next_url = self.play_list.pop(0)
                 await self.play(ctx, next_url)
 
-        def after_playing():
+        def after_playing(_):
             coro = play_next()
             self.bot.loop.create_task(coro)
 
         voice.play(discord.FFmpegPCMAudio(
-            executable='ffmpeg.exe', source="song.mp3"), after=after_playing())
+            executable='ffmpeg.exe', source="song.mp3"), after=after_playing)
         await ctx.send(embed=discord.Embed(title="Now Playing", description=url, color=discord.Color.blue()), view=self.create_controls(ctx))
 
-    def create_controls(self):
+    def create_controls(self, ctx):
         view = View()
         ps = Button(label='⏸️', style=discord.ButtonStyle.red)
         button_stop = Button(
@@ -125,7 +125,7 @@ class Music(Cog_Extension):
 
         return view
 
-    @commands.hybrid_command()
+    @commands.command()
     async def search(self, ctx, name, way=None):
         response = rq.get(
             f"https://www.youtube.com/results?search_query={name}")
@@ -169,7 +169,7 @@ class Music(Cog_Extension):
             await ctx.send(embed=discord.Embed(
                 title='Error', description='Not found', color=discord.Color.red()))
 
-    @commands.hybrid_command()
+    @commands.command()
     async def playlist(self, ctx, action, item=None, way=None):
         if action == 'add':
             if item:
